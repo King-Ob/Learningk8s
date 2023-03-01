@@ -1,0 +1,35 @@
+image:
+  repository: amancevice/superset
+  tag: latest
+  pullPolicy: Always
+
+service:
+  name: superset
+  type: ClusterIP
+  port: 8088
+
+postgresql:
+  enabled: true
+  postgresqlUsername: superset
+  postgresqlPassword: superset
+  postgresqlDatabase: superset
+
+auth:
+  type: oauth
+  oauth:
+    providers:
+      keycloak:
+        name: Keycloak
+        icon: fa-key
+        token_key: access_token
+        remote_app:
+          client_id: <client_id>
+          client_secret: <client_secret>
+          api_base_url: https://<keycloak_url>/auth/realms/<realm_name>
+          access_token_url: https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/token
+          authorize_url: https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth
+          client_kwargs:
+            scope: openid email profile
+
+persistence:
+  enabled: false

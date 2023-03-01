@@ -1,0 +1,69 @@
+image:
+  repository: amancevice/superset
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 8088
+
+postgresql:
+  postgresUser: superset
+  postgresPassword: superset
+  postgresDatabase: superset
+
+env:
+  - name: SUPERSET_LOAD_EXAMPLES
+    value: "true"
+  - name: SUPERSET_ADMIN_USERNAME
+    value: "admin"
+  - name: SUPERSET_ADMIN_PASSWORD
+    value: "admin"
+  - name: SUPERSET_WEBSERVER_PROTOCOL
+    value: "http"
+  - name: SUPERSET_WEBSERVER_PORT
+    value: "8088"
+  - name: AUTH_TYPE
+    value: AUTH_OAUTH
+  - name: AUTH_OAUTH_PROVIDERS
+    value: '[{"name": "Keycloak","icon": "fa-key","token_key": "access_token","remote_app": {"client_id": "<client_id>","client_secret": "<client_secret>","api_base_url": "https://<keycloak_url>/auth/realms/<realm_name>","access_token_url": "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/token","authorize_url": "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth","client_kwargs": {"scope": "openid email profile"}}}]'
+
+extraEnv:
+  - name: AUTH_DEFAULT_PROVIDERS
+    value: AUTH_DB
+  - name: AUTH_ROLE_PUBLIC
+    value: "Public"
+  - name: AUTH_ROLE_AUTHENTICATED
+    value: "Authenticated"
+  - name: AUTH_ROLE_ADMIN
+    value: "Admin"
+  - name: AUTH_USER_REGISTRATION
+    value: "True"
+  - name: AUTH_USER_REGISTRATION_ROLE
+    value: "AUTH_ROLE_PUBLIC"
+  - name: SECURITY_POST_LOGIN_VIEW
+    value: "/superset/welcome"
+  - name: SECURITY_POST_LOGOUT_VIEW
+    value: "/superset/login/"
+  - name: SECURITY_LOGIN_USER_TEMPLATE
+    value: "appbuilder/general/security/login_user.html"
+
+serviceAccount:
+  create: true
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth?client_id=<client_id>&redirect_uri=$scheme://$host:$port/superset/welcome&response_type=code&scope=openid+email+profile"
+  paths:
+    - path: /
+      pathType: Prefix
+      backend:
+        service:
+          name: superset
+          port:
+            name: http
+
+persistence:
+  enabled: false

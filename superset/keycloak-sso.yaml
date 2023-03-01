@@ -39,3 +39,60 @@ data:
         'icon': 'fa-key',
         'token_key': 'access_token',
         'remote_app': {
+            'client_id': '<client_id>',
+            'client_secret': '<client_secret>',
+            'api_base_url': 'https://<keycloak_url>/auth/realms/<realm_name>',
+            'access_token_url': 'https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/token',
+            'authorize_url': 'https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth',
+            'client_kwargs': {
+                'scope': 'openid email profile'
+            }
+        }
+    }]
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset
+  namespace: keycloak-sso
+  labels:
+    app: superset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset
+  template:
+    metadata:
+      labels:
+        app: superset
+    spec:
+      containers:
+        - name: superset
+          image: amancevice/superset:latest
+          env:
+            - name: FLASK_APP
+              value: superset
+            - name: FLASK_ENV
+              value: production
+            - name: SUPERSET_CONFIG
+              value: /etc/superset/superset_config.py
+          volumeMounts:
+            - name: superset-config
+              mountPath: /etc/superset
+              readOnly: true
+            - name: postgresql
+              mountPath: /var/lib/postgresql/data
+              subPath: postgresql-data
+              readOnly: false
+          ports:
+            - containerPort: 8088
+              name: superset
+      volumes:
+        - name: superset-config
+          configMap:
+            name: superset-config
+        - name: postgresql
+
