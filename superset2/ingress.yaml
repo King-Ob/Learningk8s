@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: superset-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/auth-signin: "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/auth?client_id=<client_id>&response_type=code&scope=openid&redirect_uri=http://$host$request_uri&state=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-url: "https://<keycloak_url>/auth/realms/<realm_name>/protocol/openid-connect/token"
+    nginx.ingress.kubernetes.io/auth-method: "POST"
+spec:
+  tls:
+  - hosts:
+    - superset.example.com # your Superset domain
+    secretName: keycloak-tls # if using HTTPS
+  rules:
+  - host: superset.example.com # your Superset

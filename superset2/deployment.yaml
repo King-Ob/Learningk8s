@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset
+  labels:
+    app: superset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset
+  template:
+    metadata:
+      labels:
+        app: superset
+    spec:
+      containers:
+      - name: superset
+        image: superset_image:tag
+        ports:
+        - containerPort: 8088
+        envFrom:
+        - configMapRef:
+            name: superset-config
+        volumeMounts:
+        - name: keycloak-credentials
+          mountPath: /etc/keycloak-credentials
+          readOnly: true
+      volumes:
+      - name: keycloak-credentials
+        secret:
+          secretName: keycloak-credentials
+      imagePullSecrets:
+      - name: dockerhub-secret # if you are using a private registry
